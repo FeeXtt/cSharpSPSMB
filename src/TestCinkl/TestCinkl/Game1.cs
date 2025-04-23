@@ -50,8 +50,37 @@ public class Game1 : Game
         // Aktualizuj pozici podle rychlosti
         _playerPosition += _velocity;
         
+        // Rozměry hráče
+        int playerWidth = 8;
+        int playerHeight = 8;
         
+        int screenWidth = _graphics.PreferredBackBufferWidth;
+        int screenHeight = _graphics.PreferredBackBufferHeight;
         // TODO: Add your update logic here
+        
+        // Kolize s pravým a levým okrajem
+        if (_playerPosition.X < 0)
+        {
+            _playerPosition.X = 0;
+            _velocity.X = 0;
+        }
+        else if (_playerPosition.X + playerWidth > screenWidth)
+        {
+            _playerPosition.X = screenWidth - playerWidth;
+            _velocity.X = 0;
+        }
+
+        // Kolize s horním a dolním okrajem
+        if (_playerPosition.Y < 0)
+        {
+            _playerPosition.Y = 0;
+            _velocity.Y = 0;
+        }
+        else if (_playerPosition.Y + playerHeight > screenHeight)
+        {
+            _playerPosition.Y = screenHeight - playerHeight;
+            _velocity.Y = 0;
+        }
 
         base.Update(gameTime);
     }
