@@ -24,6 +24,12 @@ public class Game1 : Game
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
+        
+        
+    }
+    private bool IsColliding(Rectangle a, Rectangle b)
+    {
+        return a.Intersects(b);
     }
 
     protected override void Initialize()
@@ -65,13 +71,13 @@ public class Game1 : Game
             _velocity.X = MoveSpeed;
         else
             _velocity.X = 0;
-        
+
         if (_isOnGround && (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Space)))
         {
             _velocity.Y = JumpVelocity;
             _isOnGround = false; // už není na zemi
         }
-        
+
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         // Aplikuj gravitaci na vertikální složku rychlosti
@@ -79,52 +85,35 @@ public class Game1 : Game
 
         // Aktualizuj pozici podle rychlosti
         _playerPosition += _velocity;
-        
-        // Rozměry hráče
-        int playerWidth = 8;
-        int playerHeight = 8;
-        
-        int screenWidth = _graphics.PreferredBackBufferWidth;
-        int screenHeight = _graphics.PreferredBackBufferHeight;
-        // TODO: Add your update logic here
-        
-        // Kolize s pravým a levým okrajem
-        if (_playerPosition.X < 0)
-        {
-            _playerPosition.X = 0;
-            _velocity.X = 0;
-        }
-        else if (_playerPosition.X + playerWidth > screenWidth)
-        {
-            _playerPosition.X = screenWidth - playerWidth;
-            _velocity.X = 0;
-        }
-        
-        // Kolize s okraji
-        if (_playerPosition.X < 0)
-        {
-            _playerPosition.X = 0;
-            _velocity.X = 0;
-        }
-        else if (_playerPosition.X + playerWidth > screenWidth)
-        {
-            _playerPosition.X = screenWidth - playerWidth;
-            _velocity.X = 0;
-        }
 
-        // Kolize se spodní hranou (zemí)
-        if (_playerPosition.Y + playerHeight >= screenHeight)
-        {
-            _playerPosition.Y = screenHeight - playerHeight;
-            _velocity.Y = 0;
-            _isOnGround = true;
-        }
-        else
-        {
-            _isOnGround = false;
-        }
+        Rectangle playerRect = new Rectangle(
+            (int)_playerPosition.X,
+            (int)_playerPosition.Y,
+            8, 8
+        );
 
-        base.Update(gameTime);
+        _isOnGround = false;
+        
+
+        foreach (var tile in _tiles)
+        {
+            if (IsColliding(playerRect, tile))
+            {
+                // Pouze když hráč padá dolů
+                if (_velocity.Y >= 0 &&
+                    playerRect.Bottom > tile.Top &&
+                    playerRect.Top < tile.Top)
+                {
+                    // Přichytíme hráče na vršek tile
+                    _playerPosition.Y = tile.Top - playerRect.Height;
+                    _velocity.Y = 0;
+                    _isOnGround = true;
+                    break;
+                }
+            }
+
+            base.Update(gameTime);
+        }
     }
 
     protected override void Draw(GameTime gameTime)
