@@ -12,6 +12,7 @@ public class Game1 : Game
     private Vector2 _playerPosition;
     private Vector2 _velocity;
     private const float Gravity = 0.3f;
+    private const float MoveSpeed = 2.0f;
 
     public Game1()
     {
@@ -41,6 +42,14 @@ public class Game1 : Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
+        KeyboardState keyboard = Keyboard.GetState();
+
+        if (keyboard.IsKeyDown(Keys.A))
+            _velocity.X = -MoveSpeed;
+        else if (keyboard.IsKeyDown(Keys.D))
+            _velocity.X = MoveSpeed;
+        else
+            _velocity.X = 0;
         
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
