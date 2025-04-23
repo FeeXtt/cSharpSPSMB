@@ -14,10 +14,11 @@ public class Game1 : Game
     private Vector2 _velocity;
     private const float Gravity = 0.3f;
     private const float MoveSpeed = 2.0f;
-    private const float JumpVelocity = -6f;
+    private const float JumpVelocity = -10f;
     private bool _isOnGround;
     private List<Rectangle> _tiles;
     private Rectangle _tileSourceRect;
+    private const int PlayerSize = 32;
 
     public Game1()
     {
@@ -39,11 +40,11 @@ public class Game1 : Game
         
         _tiles = new List<Rectangle>
         {
-            new Rectangle(50, 200, 8, 8),
-            new Rectangle(58, 200, 8, 8),
-            new Rectangle(66, 200, 8, 8),
-            new Rectangle(100, 300, 8, 8),
-            new Rectangle(200, 250, 8, 8)
+            new Rectangle(50, 300, 32, 32),
+            new Rectangle(82, 300, 32, 32),
+            new Rectangle(114, 300, 32, 32),
+            new Rectangle(200, 250, 32, 32),
+            new Rectangle(300, 350, 32, 32)
         };
         _tileSourceRect = new Rectangle(8, 0, 8, 8);
 
@@ -61,81 +62,87 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-            Keyboard.GetState().IsKeyDown(Keys.Escape))
-            Exit();
-        KeyboardState keyboard = Keyboard.GetState();
+        Keyboard.GetState().IsKeyDown(Keys.Escape))
+        Exit();
 
-        if (keyboard.IsKeyDown(Keys.A))
-            _velocity.X = -MoveSpeed;
-        else if (keyboard.IsKeyDown(Keys.D))
-            _velocity.X = MoveSpeed;
-        else
-            _velocity.X = 0;
+    KeyboardState keyboard = Keyboard.GetState();
 
-        if (_isOnGround && (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Space)))
+    // Pohyb do stran
+    if (keyboard.IsKeyDown(Keys.A))
+        _velocity.X = -MoveSpeed;
+    else if (keyboard.IsKeyDown(Keys.D))
+        _velocity.X = MoveSpeed;
+    else
+        _velocity.X = 0;
+
+    // Skok (s kontrolou, že je hráč na zemi)
+    if (_isOnGround && (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Space)))
+    {
+        _velocity.Y = JumpVelocity;
+        _isOnGround = false; // už není na zemi
+    }
+
+    // Aplikování gravitace na vertikální rychlost
+    _velocity.Y += Gravity;
+
+    // Aktualizace pozice hráče
+    _playerPosition += _velocity;
+
+    Rectangle playerRect = new Rectangle(
+        (int)_playerPosition.X,
+        (int)_playerPosition.Y,
+        PlayerSize,
+        PlayerSize
+    );
+
+    _isOnGround = false;
+
+    // **Kontrola hranic okna** (proti levému, pravému a dolnímu okraji)
+    int screenWidth = _graphics.PreferredBackBufferWidth;
+    int screenHeight = _graphics.PreferredBackBufferHeight;
+
+    // Levý okraj
+    if (_playerPosition.X < 0)
+    {
+        _playerPosition.X = 0;
+        _velocity.X = 0;
+    }
+    // Pravý okraj
+    else if (_playerPosition.X + PlayerSize > screenWidth)
+    {
+        _playerPosition.X = screenWidth - PlayerSize;
+        _velocity.X = 0;
+    }
+
+    // Dolní okraj (země)
+    if (_playerPosition.Y + PlayerSize > screenHeight)
+    {
+        _playerPosition.Y = screenHeight - PlayerSize;
+        _velocity.Y = 0;
+        _isOnGround = true;
+    }
+
+    // Detekce kolizí s platformami
+    foreach (var tile in _tiles)
+    {
+        if (IsColliding(playerRect, tile))
         {
-            _velocity.Y = JumpVelocity;
-            _isOnGround = false; // už není na zemi
-        }
-
-        float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-        // Aplikuj gravitaci na vertikální složku rychlosti
-        _velocity.Y += Gravity;
-
-        // Aktualizuj pozici podle rychlosti
-        _playerPosition += _velocity;
-
-        Rectangle playerRect = new Rectangle(
-            (int)_playerPosition.X,
-            (int)_playerPosition.Y,
-            8, 8
-        );
-
-        _isOnGround = false;
-        
-
-        foreach (var tile in _tiles)
-        {
-            if (IsColliding(playerRect, tile))
+            // Kolize ze spodu (přistání na platformě)
+            if (_velocity.Y >= 0 && playerRect.Bottom > tile.Top && playerRect.Top < tile.Top)
             {
-                // Pouze když hráč padá dolů
-                if (_velocity.Y >= 0 &&
-                    playerRect.Bottom > tile.Top &&
-                    playerRect.Top < tile.Top)
-                {
-                    // Přichytíme hráče na vršek tile
-                    _playerPosition.Y = tile.Top - playerRect.Height;
-                    _velocity.Y = 0;
-                    _isOnGround = true;
-                    break;
-                }
-            }
-            
-            int screenWidth = _graphics.PreferredBackBufferWidth;
-            int screenHeight = _graphics.PreferredBackBufferHeight;
-            
-            // Levý okraj
-            if (_playerPosition.X < 0)
-            {
-                _playerPosition.X = 0;
-                _velocity.X = 0;
-            }
-            // Pravý okraj
-            else if (_playerPosition.X + 8 > screenWidth)
-            {
-                _playerPosition.X = screenWidth - 8;
-                _velocity.X = 0;
-            }
-
-            // Dolní okraj (země)
-            if (_playerPosition.Y + 8 > screenHeight)
-            {
-                _playerPosition.Y = screenHeight - 8;
+                // Pokud narazíme na platformu zespodu, přichytíme hráče na platformu
+                _playerPosition.Y = tile.Top - playerRect.Height;
                 _velocity.Y = 0;
                 _isOnGround = true;
+                break; // po kolizi se zastavíme
             }
-
+            // Kolize zeshora (aby hráč neprošel platformou)
+            else if (_velocity.Y < 0 && playerRect.Top < tile.Bottom && playerRect.Bottom > tile.Bottom)
+            {
+                _playerPosition.Y = tile.Bottom; // přichytí hráče na spodní část platformy
+                _velocity.Y = 0; // zastaví vertikální pohyb
+            }
+        }
             base.Update(gameTime);
         }
     }
@@ -143,16 +150,26 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
         
+        _tileSourceRect = new Rectangle(8, 8, 8, 8);
         foreach (var tile in _tiles)
         {
-            _spriteBatch.Draw(_spriteSheet, new Vector2(tile.X, tile.Y), _tileSourceRect, Color.White);
+            _spriteBatch.Draw( _spriteSheet,
+                new Rectangle(tile.X, tile.Y, 32, 32), // cílový obdélník
+                _tileSourceRect, // zdrojový sprite (8x8)
+                Color.White);
         }
+        Rectangle playerSource = new Rectangle(0, 0, 8, 8); // sprite hráče v sheetu
+        Rectangle playerDestination = new Rectangle(
+            (int)_playerPosition.X,
+            (int)_playerPosition.Y,
+            PlayerSize,  // 32
+            PlayerSize   // 32
+        );
         
-        Rectangle sourceRectangle = new Rectangle(0, 0, 8, 8);
-        _tileSourceRect = new Rectangle(8, 8, 8, 8);
-        _spriteBatch.Draw(_spriteSheet, _playerPosition, sourceRectangle, Color.White);
+        
+        _spriteBatch.Draw(_spriteSheet, playerDestination, playerSource, Color.White);
         _spriteBatch.End();
 
 
