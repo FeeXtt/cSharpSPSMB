@@ -13,6 +13,8 @@ public class Game1 : Game
     private Vector2 _velocity;
     private const float Gravity = 0.3f;
     private const float MoveSpeed = 2.0f;
+    private const float JumpVelocity = -6f;
+    private bool _isOnGround;
 
     public Game1()
     {
@@ -51,6 +53,12 @@ public class Game1 : Game
         else
             _velocity.X = 0;
         
+        if (_isOnGround && (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Space)))
+        {
+            _velocity.Y = JumpVelocity;
+            _isOnGround = false; // už není na zemi
+        }
+        
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         // Aplikuj gravitaci na vertikální složku rychlosti
@@ -78,17 +86,29 @@ public class Game1 : Game
             _playerPosition.X = screenWidth - playerWidth;
             _velocity.X = 0;
         }
-
-        // Kolize s horním a dolním okrajem
-        if (_playerPosition.Y < 0)
+        
+        // Kolize s okraji
+        if (_playerPosition.X < 0)
         {
-            _playerPosition.Y = 0;
-            _velocity.Y = 0;
+            _playerPosition.X = 0;
+            _velocity.X = 0;
         }
-        else if (_playerPosition.Y + playerHeight > screenHeight)
+        else if (_playerPosition.X + playerWidth > screenWidth)
+        {
+            _playerPosition.X = screenWidth - playerWidth;
+            _velocity.X = 0;
+        }
+
+        // Kolize se spodní hranou (zemí)
+        if (_playerPosition.Y + playerHeight >= screenHeight)
         {
             _playerPosition.Y = screenHeight - playerHeight;
             _velocity.Y = 0;
+            _isOnGround = true;
+        }
+        else
+        {
+            _isOnGround = false;
         }
 
         base.Update(gameTime);
