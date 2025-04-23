@@ -111,6 +111,30 @@ public class Game1 : Game
                     break;
                 }
             }
+            
+            int screenWidth = _graphics.PreferredBackBufferWidth;
+            int screenHeight = _graphics.PreferredBackBufferHeight;
+            
+            // Levý okraj
+            if (_playerPosition.X < 0)
+            {
+                _playerPosition.X = 0;
+                _velocity.X = 0;
+            }
+            // Pravý okraj
+            else if (_playerPosition.X + 8 > screenWidth)
+            {
+                _playerPosition.X = screenWidth - 8;
+                _velocity.X = 0;
+            }
+
+            // Dolní okraj (země)
+            if (_playerPosition.Y + 8 > screenHeight)
+            {
+                _playerPosition.Y = screenHeight - 8;
+                _velocity.Y = 0;
+                _isOnGround = true;
+            }
 
             base.Update(gameTime);
         }
