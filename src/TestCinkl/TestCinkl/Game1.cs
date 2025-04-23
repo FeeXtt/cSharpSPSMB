@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -15,6 +16,8 @@ public class Game1 : Game
     private const float MoveSpeed = 2.0f;
     private const float JumpVelocity = -6f;
     private bool _isOnGround;
+    private List<Rectangle> _tiles;
+    private Rectangle _tileSourceRect;
 
     public Game1()
     {
@@ -27,6 +30,16 @@ public class Game1 : Game
     {
         _playerPosition = new Vector2(100, 100);
         _velocity = Vector2.Zero;
+        
+        _tiles = new List<Rectangle>
+        {
+            new Rectangle(50, 200, 8, 8),
+            new Rectangle(58, 200, 8, 8),
+            new Rectangle(66, 200, 8, 8),
+            new Rectangle(100, 300, 8, 8),
+            new Rectangle(200, 250, 8, 8)
+        };
+        _tileSourceRect = new Rectangle(8, 0, 8, 8);
 
         base.Initialize();
     }
@@ -118,7 +131,14 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
         _spriteBatch.Begin();
+        
+        foreach (var tile in _tiles)
+        {
+            _spriteBatch.Draw(_spriteSheet, new Vector2(tile.X, tile.Y), _tileSourceRect, Color.White);
+        }
+        
         Rectangle sourceRectangle = new Rectangle(0, 0, 8, 8);
+        _tileSourceRect = new Rectangle(8, 8, 8, 8);
         _spriteBatch.Draw(_spriteSheet, _playerPosition, sourceRectangle, Color.White);
         _spriteBatch.End();
 
