@@ -15,7 +15,7 @@ Udělejte si pro fizzbuzz fuknci, která bude vyhodnocovat jedno číslo a vrát
 
 Program vypíše, že má napsat číslo mezi spodní a horní hranicí. Například 0 až 100
 Program vygeneruje náhodné číslo mezi spodní a horní hranicí
-Program zažádá o user input 
+Program zažádá o user input
 Pokud číslo není stejné, tak program  vypíše, jestli je číslo větší nebo menší.
 Pokud je číslo stejné, tak vypíše, že správně uhádl číslo s počtem pokusů
 
